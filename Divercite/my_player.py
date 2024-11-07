@@ -3,6 +3,7 @@ from seahorse.game.action import Action
 from seahorse.game.game_state import GameState
 from game_state_divercite import GameStateDivercite
 from seahorse.utils.custom_exceptions import MethodNotImplementedError
+import numpy as np
 
 class MyPlayer(PlayerDivercite):
     """
@@ -24,6 +25,17 @@ class MyPlayer(PlayerDivercite):
         super().__init__(piece_type, name)
         self.NUM_ITERATION_MAX = 3
 
+    def depthFunction(self, step : int):
+        '''Compute de depth for the minmax at a given step it is made such that :
+           depth = 3 if step < 25
+           depth growth exponentially from 25 until last step 40 where depth = 25
+        '''
+        if step < 30:
+            return 3
+        
+        return int(3 * np.exp((1/(40-25) * np.log(25/3))* (step-25)))
+        
+
     def compute_action(self, current_state: GameState, remaining_time: int = 1e9, **kwargs) -> Action:
         """
         Use the minimax algorithm to choose the best action based on the heuristic evaluation of game states.
@@ -37,7 +49,10 @@ class MyPlayer(PlayerDivercite):
         print("                        _---------------------_                        ")
         print("_______________________/ Inside compute_action \_______________________")
 
-        _, action = self.alphaBetaSearch(current_state, self.NUM_ITERATION_MAX)
+        current_step = current_state.get_step()
+        depth = self.depthFunction(current_step)
+        print("current_step :", current_step, " - depth :", depth)
+        _, action = self.alphaBetaSearch(current_state, depth)
         return action
 
     def utility(self, s : GameState) -> float:
