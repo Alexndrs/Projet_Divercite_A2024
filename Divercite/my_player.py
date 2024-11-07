@@ -92,3 +92,29 @@ class MyPlayer(PlayerDivercite):
         '''
         score, action = self.maxValue(s0, float('-inf'), float('inf'), 0, num_iter_max)
         return score, action
+    
+    
+
+    def heuristic(self, s: GameState) -> float:
+        delta_score = s.scores[self.get_id()] - s.scores[s.next_player.get_id()]
+        step_game = s.step_game
+        pieces_left_player = s.players_pieces_left[self.get_id()]
+        pieces_left_opponent = s.players_pieces_left[s.next_player.get_id()]
+        
+        #ici on veut pénaliser le fait de ne plus avoir certaines couleurs
+        num_zero_player = 0
+        num_zero_opponent = 0
+        for piece in pieces_left_player.keys():
+            if pieces_left_player[piece] == 0:
+                num_zero_player += 1
+            if pieces_left_opponent[piece] == 0:
+                num_zero_opponent += 1
+        
+        ponderation = {
+            'delta_score': 1,
+            'num_zero': 1,
+        }
+        
+        heuristic_score = ponderation['delta_score'] * delta_score - ponderation['num_zero'] * (num_zero_player - num_zero_opponent)
+        
+        return(heuristic_score)
