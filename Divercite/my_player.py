@@ -34,5 +34,26 @@ class MyPlayer(PlayerDivercite):
             Action: The best action as determined by minimax.
         """
 
+        print("_______________________/Inside compute_action\_______________________")
+
+        
+
+
+
         #TODO
-        raise MethodNotImplementedError()
+        possible_actions = current_state.generate_possible_heavy_actions()
+        best_action = next(possible_actions)
+        best_score = best_action.get_next_game_state().scores[self.get_id()]
+
+
+        for action in possible_actions:
+            state = action.get_next_game_state()
+            score = state.scores[self.get_id()]
+            if score > best_score:
+                best_action = action
+            print("action ", action)
+            print("score ", score)
+            print("      ________       \n")
+        
+        print("_____________________________________________________________________")
+        return best_action
