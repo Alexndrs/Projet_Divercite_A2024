@@ -5,6 +5,8 @@ from game_state_divercite import GameStateDivercite
 from seahorse.utils.custom_exceptions import MethodNotImplementedError
 import numpy as np
 
+from seahorse.game.game_layout.board import Piece   #ajoutée manuellement
+
 class MyPlayer(PlayerDivercite):
     """
     Player class for Divercite game that makes random moves.
@@ -48,6 +50,8 @@ class MyPlayer(PlayerDivercite):
         """
         print("                        _---------------------_                        ")
         print("_______________________/ Inside compute_action \_______________________")
+        if current_state.in_board((4,4)) :
+            print(current_state.get_neighbours(6,6))
 
         current_step = current_state.get_step()
         depth = self.depthFunction(current_step)
@@ -125,11 +129,28 @@ class MyPlayer(PlayerDivercite):
             if pieces_left_opponent[piece] == 0:
                 num_zero_opponent += 1
         
-        ponderation = {
+        #on bonifie les potentielles divercités
+        futur_divercity = 0
+        for i,j in range(s.get_dimensions()[0]), range(s.get_dimensions()[1]):
+            color_set = set()
+            neighbors = s.get_neighbours(i, j)
+            for neighbor in neighbors.values():
+                if isinstance(neighbor[0], Piece):
+                    color_set.add(neighbor[0].get_type()[0])
+            else:
+                empty_count += 1
+            if len(color_set) == 3 and empty_count >= 1 :
+                futur_divercity += 1
+                
+        
+        
+        
+        ponderation = {    # Ponderation des différents critères : peut être différente selon l'avancement du jeu??????
             'delta_score': 1,
             'num_zero': 1,
+            'futur_divercity': 1
         }
         
-        heuristic_score = ponderation['delta_score'] * delta_score - ponderation['num_zero'] * (num_zero_player - num_zero_opponent)
+        heuristic_score = ponderation['delta_score'] * delta_score - ponderation['num_zero'] * (num_zero_player - num_zero_opponent) + ponderation['futur_divercity'] * futur_divercity
         
         return(heuristic_score)

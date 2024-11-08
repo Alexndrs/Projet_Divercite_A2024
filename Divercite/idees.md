@@ -16,3 +16,8 @@ dans l'ordre :
 
 
 dans l'heuristique, peut être considérer la profondeur de jeu car les stratégies n'ont pas forcément le même poids selon la période de la partie ????????????? 
+
+
+RQ :
+Dans des jeux de combinaison, certaines configurations peuvent être plus rares ou plus puissantes. Identifier et évaluer ces configurations peut renforcer la stratégie de ton agent.
+-> bonifier les configurations les plus intéressantes (ex au hasard : deux cités de la même couleur côte à côte)
