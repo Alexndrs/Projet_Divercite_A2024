@@ -21,3 +21,7 @@ dans l'heuristique, peut être considérer la profondeur de jeu car les stratég
 RQ :
 Dans des jeux de combinaison, certaines configurations peuvent être plus rares ou plus puissantes. Identifier et évaluer ces configurations peut renforcer la stratégie de ton agent.
 -> bonifier les configurations les plus intéressantes (ex au hasard : deux cités de la même couleur côte à côte)
+
+
+Idée du cours :
+tout le temps jouer les mêmes coups au début de la partie pour réduire le champ des possibles

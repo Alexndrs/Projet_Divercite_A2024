@@ -116,7 +116,7 @@ class MyPlayer(PlayerDivercite):
 
     def heuristic(self, s: GameState) -> float:
         delta_score = s.scores[self.get_id()] - s.scores[s.next_player.get_id()]
-        step_game = s.step_game
+        step_game = s.get_step()
         pieces_left_player = s.players_pieces_left[self.get_id()]
         pieces_left_opponent = s.players_pieces_left[s.next_player.get_id()]
         
@@ -131,26 +131,27 @@ class MyPlayer(PlayerDivercite):
         
         #on bonifie les potentielles divercités
         futur_divercity = 0
-        for i,j in range(s.get_dimensions()[0]), range(s.get_dimensions()[1]):
-            color_set = set()
-            neighbors = s.get_neighbours(i, j)
-            for neighbor in neighbors.values():
-                if isinstance(neighbor[0], Piece):
-                    color_set.add(neighbor[0].get_type()[0])
-            else:
-                empty_count += 1
-            if len(color_set) == 3 and empty_count >= 1 :
-                futur_divercity += 1
+        for i in range(9):
+            for j in range(9):
+                color_set = set()
+                empty_count = 0
+                neighbors = s.get_neighbours(i, j)
+                for neighbor in neighbors.values():
+                    if isinstance(neighbor[0], Piece):
+                        color_set.add(neighbor[0].get_type()[0])
+                else:
+                    empty_count += 1
+                if len(color_set) == 3 and empty_count >= 1 :
+                    futur_divercity += 1
                 
         
-        
-        
         ponderation = {    # Ponderation des différents critères : peut être différente selon l'avancement du jeu??????
-            'delta_score': 1,
+            'delta_score': 3,
             'num_zero': 1,
-            'futur_divercity': 1
+            'futur_divercity': 5
         }
         
         heuristic_score = ponderation['delta_score'] * delta_score - ponderation['num_zero'] * (num_zero_player - num_zero_opponent) + ponderation['futur_divercity'] * futur_divercity
         
         return(heuristic_score)
+
