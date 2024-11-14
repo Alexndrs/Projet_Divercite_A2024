@@ -51,8 +51,7 @@ class MyPlayer(PlayerDivercite):
         """
         print("                        _---------------------_                        ")
         print("_______________________/ Inside compute_action \_______________________")
-        if current_state.in_board((4,4)) :
-            print(current_state.get_neighbours(6,6))
+
 
         current_step = current_state.get_step()
         depth = self.depthFunction(current_step)
@@ -79,7 +78,11 @@ class MyPlayer(PlayerDivercite):
             depth = 2
 
         print("current_step :", current_step, " - depth :", depth)
-        _, action = self.alphaBetaSearch(current_state, self.heuristic, depth)
+        if current_step == 0:
+            actions = list(current_state.generate_possible_heavy_actions())
+            action = actions[0]
+        else :
+            _, action = self.alphaBetaSearch(current_state, self.heuristic, depth)
         return action
 
     def utility(self, s : GameState) -> float:
@@ -154,43 +157,64 @@ class MyPlayer(PlayerDivercite):
     
 
     def heuristic(self, s: GameState) -> float:
-        delta_score = s.scores[self.get_id()] - s.scores[s.next_player.get_id()]
-        step_game = s.get_step()
-        pieces_left_player = s.players_pieces_left[self.get_id()]
-        pieces_left_opponent = s.players_pieces_left[s.next_player.get_id()]
-        
-        #ici on veut pénaliser le fait de ne plus avoir certaines couleurs
-        num_zero_player = 0
-        num_zero_opponent = 0
-        for piece in pieces_left_player.keys():
-            if pieces_left_player[piece] == 0:
-                num_zero_player += 1
-            if pieces_left_opponent[piece] == 0:
-                num_zero_opponent += 1
-        
-        #on bonifie les potentielles divercités
-        futur_divercity = 0
-        for i in range(9):
-            for j in range(9):
-                color_set = set()
-                empty_count = 0
-                neighbors = s.get_neighbours(i, j)
-                for neighbor in neighbors.values():
-                    if isinstance(neighbor[0], Piece):
-                        color_set.add(neighbor[0].get_type()[0])
-                else:
-                    empty_count += 1
-                if len(color_set) == 3 and empty_count >= 1 :
-                    futur_divercity += 1
+            delta_score = s.scores[self.get_id()] - s.scores[s.next_player.get_id()]
+            step_game = s.get_step()
+            pieces_left_player = s.players_pieces_left[self.get_id()]
+            pieces_left_opponent = s.players_pieces_left[s.next_player.get_id()]
+            
+            """
+            #ici on veut pénaliser le fait de ne plus avoir certaines couleurs
+            num_zero_player = 0
+            num_zero_opponent = 0
+            for piece in pieces_left_player.keys():
+                if pieces_left_player[piece] == 0:
+                    num_zero_player += 1
+                if pieces_left_opponent[piece] == 0:
+                    num_zero_opponent += 1
+            """
+            
+            
+            #on bonifie les potentielles divercités et malus pour les divercités adverses
+            d = s.rep.get_dimensions()
+            env = s.rep.get_env()
+            
+            futur_divercity_player = 0
+            futur_divercity_opponent = 0
+            colors = {"B", "R", "G", "Y"}
+            for i in range(d[0]):
+                for j in range(d[1]):
+                    if s.in_board((i,j)) and env.get((i,j)) and env.get((i,j)).get_type()[1] == 'C' :
+                        color_set = set()
+                        empty_count = 0
+                        neighbors = s.get_neighbours(i, j)
+                        for neighbor in neighbors.values():
+                            if isinstance(neighbor[0], Piece):
+                                color_set.add(neighbor[0].get_type()[0])
+                            else:
+                                empty_count += 1
+                        if len(color_set) == 3 and empty_count >= 1 :
+                            missing_color = colors - color_set
+                            if env[(i,j)].get_owner_id() == self.get_id() and pieces_left_player[f'{missing_color}R'] > 0:
+                                futur_divercity_player += 1
+                            if env[(i,j)].get_owner_id() == s.next_player.get_id() and pieces_left_opponent[f'{missing_color}R'] > 0:
+                                futur_divercity_opponent += 1
+                            
+            print("future_divercity_player : ", futur_divercity_player)
+            print("future_divercity_opponent : ", futur_divercity_opponent)
+
                 
-        
-        ponderation = {    # Ponderation des différents critères : peut être différente selon l'avancement du jeu??????
-            'delta_score': 3,
-            'num_zero': 1,
-            'futur_divercity': 5
-        }
-        
-        heuristic_score = ponderation['delta_score'] * delta_score - ponderation['num_zero'] * (num_zero_player - num_zero_opponent) + ponderation['futur_divercity'] * futur_divercity
-        
-        return(heuristic_score)
+            
+            ponderation = {    # Ponderation des différents critères : peut être différente selon l'avancement du jeu??????
+                'delta_score': 3,
+                'num_zero': 1,
+                'futur_divercity_player': 5,
+                'futur_divercity_opponent': 3 #moins grave car on peut l'empêcher avec un coup ou si l'on a une divercité la compenser
+            }
+            
+            #heuristic_score = ponderation['delta_score'] * delta_score - ponderation['num_zero'] * (num_zero_player - num_zero_opponent) + ponderation['futur_divercity'] * futur_divercity
+            
+            heuristic_score = ponderation['delta_score'] * delta_score + ponderation['futur_divercity_player'] * futur_divercity_player - ponderation['futur_divercity_opponent'] * futur_divercity_opponent
+            
+            return(heuristic_score)
+
 
