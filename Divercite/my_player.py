@@ -26,6 +26,7 @@ class MyPlayer(PlayerDivercite):
         """
         super().__init__(piece_type, name)
         self.NUM_ITERATION_MAX = 3
+        self.transposition_table = {}
 
     def depthFunction(self, step : int):
         '''Compute de depth for the minmax at a given step it is made such that :
@@ -55,8 +56,30 @@ class MyPlayer(PlayerDivercite):
 
         current_step = current_state.get_step()
         depth = self.depthFunction(current_step)
+        
+        if current_step < 40:
+            depth = 20
+
+        if current_step < 30:
+            depth = 10
+
+        if current_step < 30:
+            depth = 9
+
+        if current_step < 27:
+            depth = 5
+
+        if current_step < 20:
+            depth = 4
+
+        if current_step < 15:
+            depth = 3
+        
+        if current_step < 2:
+            depth = 2
+
         print("current_step :", current_step, " - depth :", depth)
-        _, action = self.alphaBetaSearch(current_state, depth)
+        _, action = self.alphaBetaSearch(current_state, self.heuristic, depth)
         return action
 
     def utility(self, s : GameState) -> float:
@@ -65,8 +88,18 @@ class MyPlayer(PlayerDivercite):
     def isTerminal(self, s : GameState, num_iter : int, num_iter_max : int) -> bool:
         return s.is_done() or num_iter == num_iter_max
 
+    def sortActionsUsingHeuristic(self, possible_actions : [Action], heuristic : callable, playerIsMax : bool):
 
-    def maxValue(self, s : GameState, alpha : float, beta : float, num_iter : int, num_iter_max : int) -> (float, Action): 
+        sorted_actions = sorted(
+            possible_actions,
+            key=lambda action: heuristic(action.get_next_game_state()),
+            reverse=playerIsMax
+        )
+
+        return possible_actions
+
+
+    def maxValue(self, s : GameState, heuristic : callable, alpha : float, beta : float, num_iter : int, num_iter_max : int) -> (float, Action):
         if self.isTerminal(s, num_iter, num_iter_max):
             return (self.utility(s), None)
         
@@ -74,9 +107,12 @@ class MyPlayer(PlayerDivercite):
         action_ = None
 
         possible_actions = s.generate_possible_heavy_actions()
+        # sorted_possible_actions = self.sortActionsUsingHeuristic(list(possible_actions), heuristic, True)
+
+        # for action in sorted_possible_actions:
         for action in possible_actions:
             s_new = action.get_next_game_state()
-            score_new, _ = self.minValue(s_new, alpha, beta, num_iter+1, num_iter_max)
+            score_new, _ = self.minValue(s_new, heuristic, alpha, beta, num_iter+1, num_iter_max)
             if score_new > score_:
                 score_ = score_new
                 action_ = action
@@ -85,7 +121,7 @@ class MyPlayer(PlayerDivercite):
                 return score_, action_
         return score_, action_
 
-    def minValue(self, s : GameState, alpha : float, beta : float, num_iter : int, num_iter_max : int) -> (float, Action): 
+    def minValue(self, s : GameState, heuristic : callable, alpha : float, beta : float, num_iter : int, num_iter_max : int) -> (float, Action): 
         if self.isTerminal(s, num_iter, num_iter_max):
             return (self.utility(s), None)
         
@@ -93,9 +129,12 @@ class MyPlayer(PlayerDivercite):
         action_ = None
 
         possible_actions = s.generate_possible_heavy_actions()
+        # sorted_possible_actions = self.sortActionsUsingHeuristic(list(possible_actions), heuristic, True)
+
+        # for action in sorted_possible_actions:
         for action in possible_actions:
             s_new = action.get_next_game_state()
-            score_new, _ = self.maxValue(s_new, alpha, beta, num_iter+1, num_iter_max)
+            score_new, _ = self.maxValue(s_new, heuristic, alpha, beta, num_iter+1, num_iter_max)
             if score_new < score_:
                 score_ = score_new
                 action_ = action
@@ -105,11 +144,11 @@ class MyPlayer(PlayerDivercite):
         return score_, action_
 
 
-    def alphaBetaSearch(self, s0 : GameState, num_iter_max : int) -> (float, Action):
+    def alphaBetaSearch(self, s0 : GameState, heuristic : callable, num_iter_max : int) -> (float, Action):
         '''
         Effectue un minMax avec pruning à partir de l'état de jeu s0 et avec une profondeur de num_iter_max
         '''
-        score, action = self.maxValue(s0, float('-inf'), float('inf'), 0, num_iter_max)
+        score, action = self.maxValue(s0, heuristic, float('-inf'), float('inf'), 0, num_iter_max)
         return score, action
     
     
