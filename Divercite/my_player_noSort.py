@@ -56,22 +56,35 @@ class MyPlayer(PlayerDivercite):
         current_step = current_state.get_step()
         depth = self.depthFunction(current_step)
         
-        depth_max = 10
-        if current_step < 35:
-            depth_max = 7
+        # if current_step < 40:
+        #     depth = 20
 
-        if current_step < 30:
-            depth_max = 6
+        # if current_step < 30:
+        #     depth = 10
+
+        # if current_step < 30:
+        #     depth = 9
+
+        # if current_step < 27:
+        #     depth = 5
+
+        # if current_step < 20:
+        #     depth = 4
+
+        # if current_step < 15:
+        #     depth = 3
         
-        if current_step < 22:
-            depth_max = 5
+        # if current_step < 2:
+        #     depth = 2
 
+        depth = 3
+
+        print("current_step :", current_step, " - depth :", depth)
         if current_step == 0:
             actions = list(current_state.generate_possible_heavy_actions())
             action = actions[0]
         else :
-            print("current_step :", current_step, " - depth :", depth_max)
-            _, action = self.alphaBetaSearch(current_state, self.utility, depth_max, current_step)
+            _, action = self.alphaBetaSearch(current_state, self.heuristic, depth)
         return action
 
     def utility(self, s : GameState) -> float:
@@ -92,10 +105,10 @@ class MyPlayer(PlayerDivercite):
             reverse=playerIsMax
         )
 
-        return sorted_actions
+        return possible_actions
 
 
-    def maxValue(self, s : GameState, heuristic : callable, alpha : float, beta : float, num_iter : int, num_iter_max : int, step: int) -> (float, Action, int):
+    def maxValue(self, s : GameState, heuristic : callable, alpha : float, beta : float, num_iter : int, num_iter_max : int) -> (float, Action, int):
         if self.isTerminal(s, num_iter, num_iter_max):
             return (self.utility(s), None, 0)
         
@@ -103,18 +116,11 @@ class MyPlayer(PlayerDivercite):
         action_ = None
         num_explored_states = 0
         possible_actions = s.generate_possible_heavy_actions()
-
-        sortWith = self.utility
-
-        if step>15:
-            sortWith = self.heuristic
-
-        sorted_possible_actions = self.sortActionsUsingHeuristic(list(possible_actions), sortWith, True)
-
-        num_branch_to_explore = 18
-        for action in list(sorted_possible_actions)[:num_branch_to_explore]:
+        # sorted_possible_actions = self.sortActionsUsingHeuristic(list(possible_actions), heuristic, True)
+        # for action in sorted_possible_actions:
+        for action in possible_actions:
             s_new = action.get_next_game_state()
-            score_new, _, num_explored_new_states = self.minValue(s_new, heuristic, alpha, beta, num_iter+1, num_iter_max, step+1)
+            score_new, _, num_explored_new_states = self.minValue(s_new, heuristic, alpha, beta, num_iter+1, num_iter_max)
             num_explored_states += num_explored_new_states + 1
             if score_new > score_:
                 score_ = score_new
@@ -124,7 +130,7 @@ class MyPlayer(PlayerDivercite):
                 return score_, action_, num_explored_states
         return score_, action_, num_explored_states
 
-    def minValue(self, s : GameState, heuristic : callable, alpha : float, beta : float, num_iter : int, num_iter_max : int, step: int) -> (float, Action, int): 
+    def minValue(self, s : GameState, heuristic : callable, alpha : float, beta : float, num_iter : int, num_iter_max : int) -> (float, Action, int): 
         if self.isTerminal(s, num_iter, num_iter_max):
             return (self.utility(s), None, 0)
         
@@ -132,18 +138,11 @@ class MyPlayer(PlayerDivercite):
         action_ = None
         num_explored_states = 0
         possible_actions = s.generate_possible_heavy_actions()
-
-        sortWith = self.utility
-
-        if step>15:
-            sortWith = self.heuristic
-
-        sorted_possible_actions = self.sortActionsUsingHeuristic(list(possible_actions), sortWith, False)
-
-        num_branch_to_explore = 18
-        for action in list(sorted_possible_actions)[:num_branch_to_explore]:
+        # sorted_possible_actions = self.sortActionsUsingHeuristic(list(possible_actions), heuristic, True)
+        # for action in sorted_possible_actions:
+        for action in possible_actions:
             s_new = action.get_next_game_state()
-            score_new, _, num_explored_new_states = self.maxValue(s_new, heuristic, alpha, beta, num_iter+1, num_iter_max, step+1)
+            score_new, _, num_explored_new_states = self.maxValue(s_new, heuristic, alpha, beta, num_iter+1, num_iter_max)
             num_explored_states += num_explored_new_states + 1
             if score_new < score_:
                 score_ = score_new
@@ -154,11 +153,11 @@ class MyPlayer(PlayerDivercite):
         return score_, action_, num_explored_states
 
 
-    def alphaBetaSearch(self, s0 : GameState, heuristic : callable, num_iter_max : int, currentStep : int) -> (float, Action):
+    def alphaBetaSearch(self, s0 : GameState, heuristic : callable, num_iter_max : int) -> (float, Action):
         '''
         Effectue un minMax avec pruning à partir de l'état de jeu s0 et avec une profondeur de num_iter_max
         '''
-        score, action, num_explored_states = self.maxValue(s0, heuristic, float('-inf'), float('inf'), 0, num_iter_max, currentStep)
+        score, action, num_explored_states = self.maxValue(s0, heuristic, float('-inf'), float('inf'), 0, num_iter_max)
 
         print("nombre d'états explorés :", num_explored_states)
         return score, action
